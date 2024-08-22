@@ -1,15 +1,19 @@
-export type Product = {
-  id: number;
-  image: string | null;
-  name: string;
-  price: number;
-};
+import { Database } from './database.types';
+
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
+  export type insertTables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert'];
+export type Enums<T extends keyof Database['public']['Enums']> =
+  Database['public']['Enums'][T];
+
+type Product = Tables<'products'>;
 
 export type PizzaSize = 'S' | 'M' | 'L' | 'XL';
 
 export type CartItem = {
   id: string;
-  product: Product;
+  product:Product;
   product_id: number;
   size: PizzaSize;
   quantity: number;

@@ -3,13 +3,13 @@ import Colors from '@/constants/Colors';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 import React from 'react';
-import { Product } from '@/types';
+import { Tables } from '@/app/types';
 import { Link, useSegments } from 'expo-router';
 
 export const defaultPizza ='https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/peperoni.png';
 
 type ProductListItemProps = {
-    product: Product;
+    product: Tables<'products'>;
 }
 
 const ProductListItem = ({ product }: ProductListItemProps) => {
