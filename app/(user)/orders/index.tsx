@@ -1,4 +1,4 @@
-import { useAdminOrderList, useMyOrderList } from "@/app/api/orders";
+import { useMyOrderList } from "@/app/api/orders";
 import OrderListItem from "@/components/OrderListItem";
 import { Stack } from "expo-router";
 import { ActivityIndicator, FlatList, Text} from "react-native";

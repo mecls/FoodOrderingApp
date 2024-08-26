@@ -4,18 +4,19 @@ import { defaultPizza } from "@/components/ProductListItem";
 import React, { useState } from "react";
 import Button from "@/components/Button";
 import { useCart } from "@/providers/CartProvider";
-import { PizzaSize } from "@/types";
+import { PizzaSize } from "@/app/types";
 import { FontAwesome } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import { useProduct } from "@/app/api/products";
+import RemoteImage from "@/components/RemoteImage";
 
 const sizes: PizzaSize[] =['S','M','L','XL'];
 
 
  const ProductDetailsScreen = () => {
   const {id: idString} = useLocalSearchParams();
-  const id = parseFloat(typeof idString == 'string' ? idString : idString[0]);
-  const {data:product, error, isLoading } = useProduct(id);
+  const id = idString !== undefined ? parseFloat(typeof idString === 'string' ? idString : idString[0]) : NaN;
+   const {data:product, error, isLoading } = useProduct(id);
 
     const {addItem} = useCart();
 
@@ -52,7 +53,8 @@ const sizes: PizzaSize[] =['S','M','L','XL'];
             </Link>
           ),}}/>
             <Stack.Screen options={{title: product.name}}/>
-            <Image source={{uri: product.image || defaultPizza}}
+            <RemoteImage path={product?.image}
+            fallback={defaultPizza}
             style={styles.image}/>
       
             <Text style={styles.title}>{product.name}</Text>

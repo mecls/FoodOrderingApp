@@ -3,16 +3,17 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import OrderItemListItem from '../../../components/OrderItemListItem';
 import OrderListItem from '../../../components/OrderListItem';
 import { useOrderDetails } from '@/app/api/orders';
+import { userUpdateOrderSubscription } from '@/app/api/orders/subscriptions';
 
 
 
 const OrderDetailScreen =()=>{
   const {id: idString} = useLocalSearchParams();
-  const id = parseFloat(typeof idString == 'string' ? idString : idString[0]);
-
+  const id = idString !== undefined ? parseFloat(typeof idString === 'string' ? idString : idString[0]) : NaN;
+  
     const {data: order, isLoading, error} = useOrderDetails(id);
     // const order = orders.find((o)=> o.id.toString()===id)
-
+  userUpdateOrderSubscription(id);
     if(isLoading){
       return <ActivityIndicator/>;
     }
@@ -22,10 +23,9 @@ const OrderDetailScreen =()=>{
     return(
         <View style={styles.container}>
             <Stack.Screen options={{title: `Order #${id}`}}/>
-            <OrderListItem order={order}/>
 
             <FlatList
-            data={order.order_items}
+            data={order?.order_items}
             contentContainerStyle={{gap:10}}
             renderItem={({item})=> <OrderItemListItem item={item}/>}
 

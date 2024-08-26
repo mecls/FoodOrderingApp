@@ -6,7 +6,10 @@ import Colors from '@/constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useDeleteProduct, useInsertProduct, useProduct, useUpdateProduct } from '@/app/api/products';
-
+import * as FileSystem from 'expo-file-system';
+import { randomUUID } from 'expo-crypto';
+import { supabase } from '@/app/lib/supabase';
+import { decode } from 'base64-arraybuffer';
 const CreateProductScreen = () => {
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
@@ -14,8 +17,8 @@ const CreateProductScreen = () => {
     const [errors, setErrors ] = useState('');
 
     const {id: idString} = useLocalSearchParams();
-    const id = parseFloat(typeof idString == 'string' ? idString : idString?.[0]);
-    const isUpdating = !!id;
+    const id = idString !== undefined ? parseFloat(typeof idString === 'string' ? idString : idString[0]) : NaN;
+     const isUpdating = !!id;
     const {data: updatingProduct} = useProduct(id);
 
     const {mutate: insertProduct} = useInsertProduct();
@@ -93,6 +96,7 @@ const CreateProductScreen = () => {
         ]);
     };
 
+    
     const onSubmit =()=>{
         if(isUpdating){
             onUpdate();
@@ -101,14 +105,16 @@ const CreateProductScreen = () => {
         }
     };
 
-    const onCreate = ()=>{
+    const onCreate = async ()=>{
        if (!validateInput()){
         return;
        }
+       const imagePath = await uploadImage();
+
        console.warn('Creating Product: ', name);
  
         //Saved in DB
-       insertProduct({name,price: parseFloat(price),image}, {
+       insertProduct({name,price: parseFloat(price),image: imagePath}, {
         onSuccess:()=> {
             resetFields();
             router.back();
@@ -117,19 +123,42 @@ const CreateProductScreen = () => {
         resetFields();
     }
 
-    const onUpdate = ()=>{
+
+    const onUpdate =async ()=>{
         if (!validateInput()){
          return;
         }  
+
+        const imagePath = await uploadImage();
+
          //Saved in DB
          updateProduct(
-            {id, name,price: parseFloat(price),image},{
+            {id, name,price: parseFloat(price),image: imagePath},{
                 onSuccess:()=> {
                     resetFields();
                     router.back();
                 },
             }
          )
+      };
+
+      const uploadImage = async () => {
+        if (!image?.startsWith('file://')) {
+          return;
+        }
+      
+        const base64 = await FileSystem.readAsStringAsync(image, {
+          encoding: 'base64',
+        });
+        const filePath = `${randomUUID()}.png`;
+        const contentType = 'image/png';
+        const { data, error } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, decode(base64), { contentType });
+        console.log(error);
+        if (data) {
+          return data.path;
+        }
       };
 
   return (

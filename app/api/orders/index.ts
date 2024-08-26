@@ -1,6 +1,6 @@
 import { Tables } from "@/app/database.types";
 import { supabase } from "@/app/lib/supabase";
-import { insertTables } from "@/app/types";
+import { insertTables, updateTables } from "@/app/types";
 import { useAuth } from "@/providers/AuthProvider";
 import { useQuery, useMutation, Mutation, useQueryClient} from "@tanstack/react-query";
 
@@ -12,14 +12,14 @@ export const useAdminOrderList = ({archived = false}) =>{
             const {data, error} = await supabase
                 .from('orders')
                 .select('*')      
-                .in('status',statuses);
+                .in('status',statuses)
+                .order('created_at', {ascending: false});
             if(error){
               throw new Error(error.message);
             }
             return data;
         }
-      });  
-    
+      });   
 }  
 
 export const useMyOrderList = () =>{
@@ -34,7 +34,8 @@ export const useMyOrderList = () =>{
               const {data, error} = await supabase
               .from('orders')
               .select('*')
-              .eq('user_id', id);
+              .eq('user_id', id)
+              .order('created_at', {ascending: false});
               if(error){
                 throw new Error(error.message);
               }
@@ -49,8 +50,8 @@ export const useMyOrderList = () =>{
       queryKey: ['orders', id],
       queryFn: async ()=>{
           const {data, error} = await supabase
-          .from('products')
-          .select('*')
+          .from('orders')
+          .select('*, order_items(*, products(*))')
           .eq('id',id)
           .single();
           if(error){
@@ -81,7 +82,39 @@ export const useMyOrderList = () =>{
       return newProduct;
     },
     async onSuccess(){
-     await queryClient.invalidateQueries(['products']);
+        await queryClient.invalidateQueries({queryKey:['orders']});
+    },
+  });
+  };
+
+  export const useUpdateOrder = ()=>{
+    const queryClient = useQueryClient();
+    
+  return useMutation({
+    async mutationFn({
+        id,
+         updatedFields
+    }:
+    {
+      id:number,
+      updatedFields:  updateTables<'orders'>
+    }) {
+     const {error, data: updatedOrder} = await supabase.
+     from('orders')
+     .update(updatedFields)
+      .eq('id',id)
+      .select()
+      .single();
+  
+      if(error){
+        throw new Error(error.message);
+      }
+      return updatedOrder;
+    },
+    async onSuccess(_ ,{ id }){
+     await queryClient.invalidateQueries({queryKey:['orders']});
+     await queryClient.invalidateQueries({queryKey:['orders',id]});
+  
     },
   });
   };

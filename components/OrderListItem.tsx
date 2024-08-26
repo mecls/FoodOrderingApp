@@ -10,7 +10,7 @@ dayjs.extend(relativeTime);
 
 
 type OrderListItemProps={
-    order: Tables<'orders'>;
+    order: Tables<'orders'> & Tables<'order_items'>;
 };
 
 

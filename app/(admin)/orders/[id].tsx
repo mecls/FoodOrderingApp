@@ -1,32 +1,36 @@
 import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import orders from '../../../assets/data/orders';
 import OrderItemListItem from '../../../components/OrderItemListItem';
 import OrderListItem from '../../../components/OrderListItem';
 import { OrderStatusList } from '@/app/types';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-import { useOrderDetails } from '@/app/api/orders';
+import { useOrderDetails, useUpdateOrder } from '@/app/api/orders';
 
 
 
 const OrderDetailScreen =()=>{
   const {id: idString} = useLocalSearchParams();
-  const id = parseFloat(typeof idString == 'string' ? idString : idString[0]);
-
+  const id = idString !== undefined ? parseFloat(typeof idString === 'string' ? idString : idString[0]) : NaN;
+  
     const {data: order, isLoading, error} = useOrderDetails(id);
-    // const order = orders.find((o)=> o.id.toString()===id)
+    const {mutate: updateOrder} = useUpdateOrder();
+
+    const updateStatus =(status: string)=>{
+      updateOrder({id: id , updatedFields: {status}});
+    };
 
     if(isLoading){
       return <ActivityIndicator/>;
     }
-    if(error){
+    if(error || !order){
       return <Text>Failed to fetch products</Text>
     }
 
+    console.log(order);
     return(
+
         <View style={styles.container}>
             <Stack.Screen options={{title: `Order #${id}`}}/>
-            <OrderListItem order={order}/>
 
             <FlatList
             data={order.order_items}
@@ -40,7 +44,7 @@ const OrderDetailScreen =()=>{
                 {OrderStatusList.map((status) => (
                   <Pressable
                     key={status}
-                    onPress={() => console.warn('Update status')}
+                    onPress={() => updateStatus(status)}
                     style={{
                       borderColor: Colors.light.tint,
                       borderWidth: 1,
